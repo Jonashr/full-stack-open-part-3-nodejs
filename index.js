@@ -3,9 +3,12 @@ const app = express()
 
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
+const cors = require('cors')
+
 
 app.use(bodyParser.json())
 app.use(morgan('tiny'))
+app.use(cors())
 
 morgan(':method :url :status :res[content-length] - :response-time ms')
 
