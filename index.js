@@ -18,6 +18,9 @@ app.get('/', (req, res) => {
     res.send('<h1>Hello world</h1>')
 })
 
+let persons = [
+
+]
 
 const generateId = () => {
   const maxId = persons.length > 0 ? 
@@ -49,7 +52,7 @@ app.get('/api/persons/:id', (request, response, next) => {
   .catch(error => next(error))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body
     console.log(body)
 
@@ -76,11 +79,8 @@ app.post('/api/persons', (request, response) => {
     person.save().then(savedPerson => {
       response.json(savedPerson.toJSON())
     })
+    .catch(error => next(error))
 
-    persons = persons.concat(person)
-
-
-    response.json(person)
 })
 
 app.delete('/api/persons/:id', (request, response) => {
@@ -92,8 +92,12 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 const errorHandler = (error, request, response, next) => {
+  console.log("ERROR NAME", error.name)
+
   if(error.name === 'CastError' && error.kind === 'ObjectId') {
     return response.status(400).send({error: 'malformatted id'})
+  } else if(error.name === 'ValidationError') {
+    return response.status(400).json({error: error.message})
   }
 
   next(error)
