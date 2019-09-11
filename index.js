@@ -1,10 +1,12 @@
+require('dotenv').config()
+
 const express = require('express')
 const app = express()
 
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
-
+const Person = require('./models/person')
 
 app.use(bodyParser.json())
 app.use(morgan('tiny'))
@@ -16,6 +18,7 @@ morgan(':method :url :status :res[content-length] - :response-time ms')
 app.get('/', (req, res) => {
     res.send('<h1>Hello world</h1>')
 })
+
 
 let persons = [
         {
@@ -54,18 +57,22 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons', (request, response) => {
-  console.log("Api persons")
-  response.json(persons)
+  Person.find({}).then (persons => {
+    response.json(persons.map(person => person.toJSON()))
+  })
 }) 
 
 app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id)
-  if(person) {
-    response.json(person)
-  } else {
-    response.status(400).end()
-  }
+  Person.findById(request.params.id).then(person => {
+    response.json(person.toJSON())
+  })
+  // const id = Number(request.params.id)
+  // const person = persons.find(person => person.id === id)
+  // if(person) {
+
+  // } else {
+  //   response.status(400).end()
+  // }
 })
 
 app.post('/api/persons', (request, response) => {
@@ -86,13 +93,18 @@ app.post('/api/persons', (request, response) => {
       })
     }
 
-    const person = {
+    const person = new Person({
       name: body.name,
       number: body.number,
       id: generateId()
-    }
+    })
+
+    person.save().then(savedPerson => {
+      response.json(savedPerson.toJSON())
+    })
 
     persons = persons.concat(person)
+
 
     response.json(person)
 })
