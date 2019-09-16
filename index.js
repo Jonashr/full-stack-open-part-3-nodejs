@@ -60,6 +60,21 @@ app.get('/api/persons/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
+app.put('/api/persons/:id', (request, response, next) => {
+  const body = request.body
+
+  const person = {
+    name: body.name,
+    number: body.number
+  }
+
+  Person.findByIdAndUpdate(request.params.id, person)
+    .then(updatedPerson => {
+      response.json(updatedPerson.toJSON())
+    })
+    .catch(error => next(error))
+})
+
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
@@ -69,13 +84,13 @@ app.post('/api/persons', (request, response, next) => {
     })
   }
 
-  const nameExists = persons.find(person => person.name === body.name)
+  // const nameExists = persons.find(person => person.name === body.name)
 
-  if(nameExists) {
-    return response.status(400).json({
-      error: 'Name must be unique'
-    })
-  }
+  // if(nameExists) {
+  //   return response.status(400).json({
+  //     error: 'Name must be unique'
+  //   })
+  // }
 
   const person = new Person({
     name: body.name,
