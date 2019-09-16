@@ -30,8 +30,15 @@ const generateId = () => {
 }
 
 app.get('/info', (req, res) => {
-  console.log('Current date' + Date(Date.now().toString()))
-  res.send('Phonebook has info for ' + persons.length + ' people<br/><br />' + Date(Date.now().toString()))
+  Person.find({})
+    .then(persons => {
+      if(persons) {
+        res.send('Phonebook has info for ' + persons.length + ' persons<br>' + Date(Date.now().toString()))
+      } else {
+        res.send('Phonebook has info for ' + 0 + ' persons<br>' + Date(Date.now().toString()))
+
+      }
+    })
 })
 
 app.get('/api/persons', (request, response,) => {
@@ -86,6 +93,7 @@ app.post('/api/persons', (request, response, next) => {
 app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then(result => {
+      console.log(result)
       response.status(204).end()
     })
     .catch(error => next(error))
