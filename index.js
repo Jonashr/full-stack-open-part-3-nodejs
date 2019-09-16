@@ -8,15 +8,16 @@ const cors = require('cors')
 const Person = require('./models/person')
 
 app.use(bodyParser.json())
-app.use(morgan('tiny'))
+// For using tiny just remove this comment, for custom use the other one below.
+// app.use(morgan('tiny'))
 app.use(cors())
 app.use(express.static('build'))
 
-morgan(':method :url :status :res[content-length] - :response-time ms')
-
-app.get('/', (req, res) => {
-  res.send('<h1>Hello world</h1>')
+morgan.token('body', function getParam (req) {
+  return JSON.stringify(req.body)
 })
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 let persons = [
 
@@ -61,7 +62,6 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
-  console.log(body)
 
   if(!body.name && !body.number) {
     return response.status(400).json({
@@ -93,7 +93,6 @@ app.post('/api/persons', (request, response, next) => {
 app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then(result => {
-      console.log(result)
       response.status(204).end()
     })
     .catch(error => next(error))
