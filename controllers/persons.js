@@ -1,25 +1,53 @@
 const personRouter = require('express').Router()
 const Person = require('../models/person')
 
-personRouter.get('/', (request, response,) => {
-  Person.find({}).then (persons => {
-    response.json(persons.map(person => person.toJSON()))
-  })
+personRouter.get('/', async (request, response, next) => {
+  try {
+    const persons = await Person.find({})
+    return response.status(200).json(persons) 
+  } catch(error) {
+    next(error)
+  }
 })
 
-personRouter.get('/:id', (request, response, next) => {
-  Person.findById(request.params.id)
-    .then(person => {
-      if(person) {
-        response.json(person.toJSON())
-      } else {
-        response.status(404).end()
-      }
+personRouter.get('/:id', async (request, response, next) => {
+  const { id } = request.params
+
+  try {
+    const person = await Person.findById(id)
+
+    if(person) {
+      return response.json(person)
+    } else {
+      return response.status(404).json({ message: `Person with id ${id} does not exist.` })
+    }
+  } catch(error) {
+    next(error)
+  }
+})
+
+
+personRouter.post('/', async (request, response, next) => {
+  const body = request.body
+
+  if(!body.name && !body.number) {
+    return response.status(400).json({ message: 'Missing name / Number in request.' })
+  }
+
+  try {
+    const person = new Person({
+      name: body.name,
+      number: body.number,
     })
-    .catch(error => next(error))
+    await person.save()
+
+    return response.status(201).json(person)
+  } catch(error) {
+    next(error)
+  }
 })
 
-personRouter.put('/:id', (request, response, next) => {
+personRouter.put('/:id', async (request, response, next) => {
   const body = request.body
 
   const person = {
@@ -27,40 +55,33 @@ personRouter.put('/:id', (request, response, next) => {
     number: body.number
   }
 
-  Person.findByIdAndUpdate(request.params.id, person)
-    .then(updatedPerson => {
-      response.json(updatedPerson.toJSON())
-    })
-    .catch(error => next(error))
-})
+  const { id } = request.params
 
-personRouter.post('/', (request, response, next) => {
-  const body = request.body
+  try {
+    if(!person.name && !person.number) {
+      return response.status(400).json({ message: 'Missing name / Number in request.' })
+    }
 
-  if(!body.name && !body.number) {
-    return response.status(400).json({
-      error: 'Content missing.'
-    })
+    const updatedPerson = await Person.findByIdAndUpdate(id, person,  { new: true })
+
+    if(!updatedPerson) {
+      return response.status(404).json({ message: 'User could not be updated as the user does not exist'})
+    }
+    return response.status(200).json(updatedPerson)
+  } catch(error) {
+    next(error)
   }
-
-  const person = new Person({
-    name: body.name,
-    number: body.number,
-  })
-
-  person.save().then(savedPerson => {
-    response.json(savedPerson.toJSON())
-  })
-    .catch(error => next(error))
-
 })
 
-personRouter.delete('/:id', (request, response, next) => {
-  Person.findByIdAndRemove(request.params.id)
-    .then(result => {
-      response.status(204).end()
-    })
-    .catch(error => next(error))
+personRouter.delete('/:id', async (request, response, next) => {
+  const { id } = request.params
+
+  try {
+    await Person.findByIdAndRemove(id)
+    return response.status(204).end()
+  } catch(error) {
+    next(error)
+  }
 })
 
 module.exports = personRouter

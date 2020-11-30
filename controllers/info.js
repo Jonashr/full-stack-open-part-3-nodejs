@@ -2,16 +2,14 @@ const infoRouter = require('express').Router()
 
 const Person = require('../models/person')
 
-infoRouter.get('/', (req, res) => {
-  Person.find({})
-    .then(persons => {
-      if(persons) {
-        res.send('Phonebook has info for ' + persons.length + ' persons<br>' + Date(Date.now().toString()))
-      } else {
-        res.send('Phonebook has info for ' + 0 + ' persons<br>' + Date(Date.now().toString()))
+infoRouter.get('/', async (req, res) => {
+  const persons = await Person.find({})
 
-      }
-    })
+  if(persons.length > 0) {
+    res.send('Phonebook has info for ' + persons.length + ' persons<br>' + new Date())
+  } else {
+    res.send('Phonebook has info for ' + 0 + ' persons<br>' + new Date())
+  }
 })
 
 module.exports = infoRouter
